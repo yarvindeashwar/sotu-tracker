@@ -9,6 +9,7 @@ SOTU Email Tracker
 import streamlit as st
 import pandas as pd
 from google.cloud import bigquery
+from google.oauth2 import service_account
 from datetime import date, timedelta
 
 st.set_page_config(page_title="SOTU Tracker", page_icon="📧", layout="wide")
@@ -28,7 +29,10 @@ sunday = monday + timedelta(days=6)
 
 @st.cache_data(ttl=1800, show_spinner="Loading SOTU data...")
 def load_data(start_date: str, end_date: str) -> pd.DataFrame:
-    client = bigquery.Client(project="arboreal-vision-339901")
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"]
+    )
+    client = bigquery.Client(credentials=credentials, project="arboreal-vision-339901")
     query = """
     WITH chain_map AS (
         SELECT DISTINCT LOWER(email) as email, chain, name, access_level
